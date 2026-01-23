@@ -1,26 +1,80 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<head>
+  <!-- Basic -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <!-- Title (VERY IMPORTANT for SEO) -->
+  <title>Pomodoro Timer for Students | PomoDoro – Focus & Productivity App</title>
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <!-- Primary Meta Description -->
+  <meta
+          name="description"
+          content="PomoDoro is a free Pomodoro timer app for students and professionals to improve focus, productivity, and time management using the Pomodoro technique."
+  />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Keywords (not very powerful now, but still okay) -->
+  <meta
+          name="keywords"
+          content="pomodoro timer, pomodoro app, focus timer, study timer, productivity app, student focus app"
+  />
+
+  <meta name="author" content="PomoDoro App Team" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+  <meta property="og:title" content="PomoDoro – Pomodoro Timer for Focus & Study" />
+  <meta
+          property="og:description"
+          content="Boost focus and productivity with PomoDoro – a simple Pomodoro timer app designed for students and deep work."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yourdomain.com" />
+  <meta property="og:image" content="https://yourdomain.com/og-image.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PomoDoro – Study & Focus Timer" />
+  <meta
+          name="twitter:description"
+          content="Free Pomodoro timer app for focused study sessions and productivity."
+  />
+  <meta name="twitter:image" content="https://yourdomain.com/og-image.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Structured Data (VERY GOOD for Google SEO) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "PomoDoro",
+      "operatingSystem": "Web",
+      "applicationCategory": "ProductivityApplication",
+      "description": "A Pomodoro timer app to improve focus, productivity, and study habits.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  </script>
+
+</head>
+
+<body>
+<noscript>
+  PomoDoro requires JavaScript to work properly. Please enable JavaScript.
+</noscript>
+
+<div id="root"></div>
+
+<script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
