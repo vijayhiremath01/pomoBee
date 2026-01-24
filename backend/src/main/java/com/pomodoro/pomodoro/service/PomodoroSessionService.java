@@ -1,6 +1,7 @@
 package com.pomodoro.pomodoro.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -26,13 +27,17 @@ public class PomodoroSessionService {
         return repository.save(session);
     }
 
-      public PomodoroSession completeSession(Long id){
-         PomodoroSession session = repository.findById(id).orElseThrow(() -> new RuntimeException("Session not found"));
-        
-           session.setCompleted(true);
-           session.setEndTime(LocalDateTime.now());
+    public PomodoroSession completeSession(Long id) {
+        PomodoroSession session = repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
 
-           return repository.save(session);
+        session.setCompleted(true);
+        session.setEndTime(LocalDateTime.now());
+
+        return repository.save(session);
     }
-    
+
+    public List<PomodoroSession> getAllSessions() {
+        return repository.findAll();
+    }
 }

@@ -1,5 +1,7 @@
 package com.pomodoro.pomodoro.controller;
+import java.util.List;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,4 +32,10 @@ public class PomodoroSessionController {
     public PomodoroSession completeSession(@PathVariable Long id){
         return service.completeSession(id);
     }
+
+    @GetMapping
+    public List<PomodoroSession> getAllSessions(){
+        return service.getAllSessions();
+        }
+
 }
