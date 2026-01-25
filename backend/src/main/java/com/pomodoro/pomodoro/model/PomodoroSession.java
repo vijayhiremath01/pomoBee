@@ -11,69 +11,68 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "pomodoro_sessions")
 public class PomodoroSession {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String sessionType ;
+    private String sessionType;
 
-    private int duration ; 
+    private int duration;
 
-    private boolean completed ; 
+    private boolean completed;
 
-    private LocalDateTime startTime ; 
-    private LocalDateTime endTime ; 
-   
+    private LocalDateTime startTime;
 
-    // Getters 
-    public Long getId(){
-        return id ; 
+    private LocalDateTime endTime;
+
+    // ---------- GETTERS ----------
+    public Long getId() {
+        return id;
     }
 
-    public String getSessionType(){
-        return sessionType ; 
+    public String getSessionType() {
+        return sessionType;
     }
 
-    public int getDuration(){
-        return duration ; 
+    public int getDuration() {
+        return duration;
     }
 
-    public boolean isCompleted(){
-        return completed ; 
+    public boolean isCompleted() {
+        return completed;
     }
 
-    public LocalDateTime getStartTime(){
-        return startTime ; 
+    public LocalDateTime getStartTime() {   // ✅ CORRECT
+        return startTime;
     }
 
-    public LocalDateTime getEndTime(){
-        return endTime ; 
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
-   // Setters 
-   public void setId(Long id){
-    this.id = id ;
-   }
-   
-   public void setSessionType(String sessionType){
-    this.sessionType = sessionType ;
-   }
+    // ---------- SETTERS ----------
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-   public void setDuration(int duration){
-    this.duration = duration ;
-   }
-   
-   public void setCompleted(boolean completed){
-    this.completed = completed ;
-   }
-   
-   public void setStartTime(LocalDateTime startTime){
-    this.startTime = startTime ;
-   }
-   
-   public void setEndTime(LocalDateTime endTime){
-    this.endTime = endTime ;
-   }
+    public void setSessionType(String sessionType) {
+        this.sessionType = sessionType;
+    }
 
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
 
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
 }

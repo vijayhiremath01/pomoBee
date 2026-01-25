@@ -20,6 +20,9 @@ export function Footer() {
             <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-foreground transition-colors">
               Terms & Conditions
             </Link>
+            <Link to="/history" className="text-muted-foreground hover:text-foreground transition-colors">
+              History
+            </Link>
             <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
               Contact
             </Link>
