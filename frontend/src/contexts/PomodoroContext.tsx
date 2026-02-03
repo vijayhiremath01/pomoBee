@@ -46,64 +46,83 @@ const defaultSettings: Settings = {
 };
 
 const PomodoroContext = createContext<PomodoroContextType | undefined>(undefined);
+const STORAGE_KEYS = {
+  settings: "pomodoroSettings",
+  mode: "pomodoroMode",
+  timeLeft: "pomodoroTimeLeft",
+  isRunning: "pomodoroIsRunning",
+  completed: "completedPomodoros",
+  sessionId: "pomodoroSessionId",
+  endAt: "pomodoroEndAt",
+};
 
 /* ================= PROVIDER ================= */
 export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   /* ---------- SETTINGS ---------- */
   const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem("pomodoroSettings");
+    const saved = localStorage.getItem(STORAGE_KEYS.settings);
     return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
   });
 
   /* ---------- TIMER STATE (with persistence) ---------- */
   const [mode, setMode] = useState<TimerMode>(() => {
-    const saved = localStorage.getItem("pomodoroMode");
+    const saved = localStorage.getItem(STORAGE_KEYS.mode);
     return (saved as TimerMode) || "pomodoro";
   });
 
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    const saved = localStorage.getItem("pomodoroTimeLeft");
+    const saved = localStorage.getItem(STORAGE_KEYS.timeLeft);
+    const savedIsRunning = localStorage.getItem(STORAGE_KEYS.isRunning) === "true";
+    const savedEndAt = localStorage.getItem(STORAGE_KEYS.endAt);
+
+    if (savedIsRunning && savedEndAt) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((parseInt(savedEndAt, 10) - Date.now()) / 1000)
+      );
+      if (remaining > 0) return remaining;
+    }
+
     return saved ? parseInt(saved, 10) : settings.pomodoroDuration * 60;
   });
 
   const [isRunning, setIsRunning] = useState<boolean>(() => {
-    const saved = localStorage.getItem("pomodoroIsRunning");
+    const saved = localStorage.getItem(STORAGE_KEYS.isRunning);
     return saved ? saved === "true" : false;
   });
 
   const [completedPomodoros, setCompletedPomodoros] = useState<number>(() => {
-    const saved = localStorage.getItem("completedPomodoros");
+    const saved = localStorage.getItem(STORAGE_KEYS.completed);
     return saved ? parseInt(saved, 10) : 0;
   });
 
   /* ---------- REFS ---------- */
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Absolute end timestamp (ms since epoch). Drives time-difference based countdown.
+  const timerEndAtRef = useRef<number | null>(null);
   // 🔑 STORES BACKEND SESSION ID
   const sessionIdRef = useRef<number | null>(null);
 
-  // Restore sessionId from localStorage on mount
+  // Restore sessionId and end timestamp from localStorage on mount
   useEffect(() => {
-    const savedSessionId = localStorage.getItem("pomodoroSessionId");
+    const savedSessionId = localStorage.getItem(STORAGE_KEYS.sessionId);
     if (savedSessionId) {
       sessionIdRef.current = parseInt(savedSessionId, 10);
+    }
+
+    const savedEndAt = localStorage.getItem(STORAGE_KEYS.endAt);
+    if (savedEndAt) {
+      timerEndAtRef.current = parseInt(savedEndAt, 10);
     }
   }, []);
 
   /* ---------- SAVE STATE TO LOCALSTORAGE ---------- */
   useEffect(() => {
-    localStorage.setItem("pomodoroMode", mode);
-    localStorage.setItem("pomodoroTimeLeft", timeLeft.toString());
-    localStorage.setItem("pomodoroIsRunning", isRunning.toString());
-    localStorage.setItem("completedPomodoros", completedPomodoros.toString());
+    localStorage.setItem(STORAGE_KEYS.mode, mode);
+    localStorage.setItem(STORAGE_KEYS.timeLeft, timeLeft.toString());
+    localStorage.setItem(STORAGE_KEYS.isRunning, isRunning.toString());
+    localStorage.setItem(STORAGE_KEYS.completed, completedPomodoros.toString());
   }, [mode, timeLeft, isRunning, completedPomodoros]);
-
-  useEffect(() => {
-    if (sessionIdRef.current !== null) {
-      localStorage.setItem("pomodoroSessionId", sessionIdRef.current.toString());
-    } else {
-      localStorage.removeItem("pomodoroSessionId");
-    }
-  }, [sessionIdRef.current]);
 
   /* ---------- HELPERS ---------- */
   const getDuration = useCallback(
@@ -161,6 +180,11 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   /* ================= START SESSION ================= */
   const start = useCallback(async () => {
+    // Set end timestamp based on current remaining time.
+    const endAt = Date.now() + timeLeft * 1000;
+    timerEndAtRef.current = endAt;
+    localStorage.setItem(STORAGE_KEYS.endAt, endAt.toString());
+
     setIsRunning(true);
 
     try {
@@ -173,19 +197,34 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       sessionIdRef.current = data.id;
+      localStorage.setItem(STORAGE_KEYS.sessionId, data.id.toString());
       console.log("Session started with id:", data.id);
     } catch (error) {
       console.error("Failed to start session", error);
     }
-  }, [mode, getDuration]);
+  }, [mode, getDuration, timeLeft]);
 
-  const pause = useCallback(() => setIsRunning(false), []);
+  const pause = useCallback(() => {
+    if (timerEndAtRef.current) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((timerEndAtRef.current - Date.now()) / 1000)
+      );
+      setTimeLeft(remaining);
+    }
+
+    timerEndAtRef.current = null;
+    localStorage.removeItem(STORAGE_KEYS.endAt);
+    setIsRunning(false);
+  }, []);
 
   const reset = useCallback(() => {
     setIsRunning(false);
     setTimeLeft(getDuration(mode));
+    timerEndAtRef.current = null;
+    localStorage.removeItem(STORAGE_KEYS.endAt);
     sessionIdRef.current = null; // Clear session id on reset
-    localStorage.removeItem("pomodoroSessionId");
+    localStorage.removeItem(STORAGE_KEYS.sessionId);
   }, [getDuration, mode]);
 
   /* ================= TIMER COMPLETE ================= */
@@ -202,7 +241,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
         console.error("Failed to complete session", error);
       }
       sessionIdRef.current = null;
-      localStorage.removeItem("pomodoroSessionId");
+      localStorage.removeItem(STORAGE_KEYS.sessionId);
     }
 
     playAlarm();
@@ -222,18 +261,38 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     }
   }, [mode, completedPomodoros, getDuration, playAlarm]);
 
+  // Recompute remaining seconds from the absolute end time.
+  // This avoids drift/throttling issues from setInterval in background tabs.
+  const syncTimeLeft = useCallback(() => {
+    if (!timerEndAtRef.current) return;
+
+    const remaining = Math.max(
+      0,
+      Math.ceil((timerEndAtRef.current - Date.now()) / 1000)
+    );
+
+    setTimeLeft((prev) => (prev === remaining ? prev : remaining));
+
+    if (remaining <= 0) {
+      timerEndAtRef.current = null;
+      localStorage.removeItem(STORAGE_KEYS.endAt);
+      handleTimerComplete();
+    }
+  }, [handleTimerComplete]);
+
   /* ================= TIMER INTERVAL ================= */
   useEffect(() => {
     if (isRunning) {
+      if (!timerEndAtRef.current) {
+        const endAt = Date.now() + timeLeft * 1000;
+        timerEndAtRef.current = endAt;
+        localStorage.setItem(STORAGE_KEYS.endAt, endAt.toString());
+      }
+
+      syncTimeLeft();
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            handleTimerComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+        syncTimeLeft();
+      }, 250);
     }
 
     return () => {
@@ -241,7 +300,32 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, handleTimerComplete]);
+  }, [isRunning, syncTimeLeft, timeLeft]);
+
+  /* ================= VISIBILITY / FOCUS ================= */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncTimeLeft();
+      }
+    };
+
+    const handleFocus = () => syncTimeLeft();
+    const handleBlur = () => syncTimeLeft();
+    const handleBeforeUnload = () => syncTimeLeft();
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [syncTimeLeft]);
 
   /* ================= DARK MODE ================= */
   useEffect(() => {
@@ -250,7 +334,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   /* ================= SAVE SETTINGS ================= */
   useEffect(() => {
-    localStorage.setItem("pomodoroSettings", JSON.stringify(settings));
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
   }, [settings]);
 
   /* ================= UPDATE SETTINGS ================= */
