@@ -14,6 +14,7 @@ public class SecurityConfig {
         http
             // 🔴 Required for H2 console
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
 
             // 🔴 Allow H2 console + APIs
             .authorizeHttpRequests(auth -> auth
