@@ -126,21 +126,21 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   /* ---------- HELPERS ---------- */
   const getDuration = useCallback(
-      (timerMode: TimerMode) => {
-        switch (timerMode) {
-          case "pomodoro":
-            return settings.pomodoroDuration * 60;
-          case "shortBreak":
-            return settings.shortBreakDuration * 60;
-          case "longBreak":
-            return settings.longBreakDuration * 60;
-        }
-      },
-      [
-        settings.pomodoroDuration,
-        settings.shortBreakDuration,
-        settings.longBreakDuration,
-      ]
+    (timerMode: TimerMode) => {
+      switch (timerMode) {
+        case "pomodoro":
+          return settings.pomodoroDuration * 60;
+        case "shortBreak":
+          return settings.shortBreakDuration * 60;
+        case "longBreak":
+          return settings.longBreakDuration * 60;
+      }
+    },
+    [
+      settings.pomodoroDuration,
+      settings.shortBreakDuration,
+      settings.longBreakDuration,
+    ]
   );
 
   const totalTime = getDuration(mode);
@@ -151,7 +151,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     if (settings.alarmSound === "none") return;
 
     const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      (window as any).webkitAudioContext)();
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -160,18 +160,18 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     gainNode.connect(audioContext.destination);
 
     oscillator.frequency.value =
-        settings.alarmSound === "bell"
-            ? 800
-            : settings.alarmSound === "digital"
-                ? 1000
-                : 400;
+      settings.alarmSound === "bell"
+        ? 800
+        : settings.alarmSound === "digital"
+          ? 1000
+          : 400;
 
     oscillator.type = "sine";
 
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(
-        0.01,
-        audioContext.currentTime + 0.5
+      0.01,
+      audioContext.currentTime + 0.5
     );
 
     oscillator.start();
@@ -189,10 +189,10 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const response = await fetch(
-          `http://localhost:8080/api/sessions/start?sessionType=${mode}&duration=${Math.floor(
-              getDuration(mode) / 60
-          )}`,
-          { method: "POST" }
+        `http://localhost:8080/api/sessions/start?sessionType=${mode}&duration=${Math.floor(
+          getDuration(mode) / 60
+        )}`,
+        { method: "POST" }
       );
 
       const data = await response.json();
@@ -227,14 +227,30 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEYS.sessionId);
   }, [getDuration, mode]);
 
+  /* ================= MODE CHANGE ================= */
+  const handleModeChange = useCallback(
+    (newMode: TimerMode) => {
+      setIsRunning(false);
+      setMode(newMode);
+      const newDuration = getDuration(newMode);
+      setTimeLeft(newDuration);
+
+      timerEndAtRef.current = null;
+      localStorage.removeItem(STORAGE_KEYS.endAt);
+      sessionIdRef.current = null;
+      localStorage.removeItem(STORAGE_KEYS.sessionId);
+    },
+    [getDuration]
+  );
+
   /* ================= TIMER COMPLETE ================= */
   const handleTimerComplete = useCallback(async () => {
     // Inform backend that session is complete
     if (sessionIdRef.current) {
       try {
         await fetch(
-            `http://localhost:8080/api/sessions/complete/${sessionIdRef.current}`,
-            { method: "POST" }
+          `http://localhost:8080/api/sessions/complete/${sessionIdRef.current}`,
+          { method: "POST" }
         );
         console.log("Session completed:", sessionIdRef.current);
       } catch (error) {
@@ -339,31 +355,31 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   /* ================= UPDATE SETTINGS ================= */
   const updateSettings = useCallback(
-      (newSettings: Partial<Settings>) => {
-        setSettings((prev) => ({ ...prev, ...newSettings }));
-      },
-      []
+    (newSettings: Partial<Settings>) => {
+      setSettings((prev) => ({ ...prev, ...newSettings }));
+    },
+    []
   );
 
   /* ================= CONTEXT ================= */
   return (
-      <PomodoroContext.Provider
-          value={{
-            mode,
-            setMode,
-            timeLeft,
-            isRunning,
-            start,
-            pause,
-            reset,
-            settings,
-            updateSettings,
-            progress,
-            completedPomodoros,
-          }}
-      >
-        {children}
-      </PomodoroContext.Provider>
+    <PomodoroContext.Provider
+      value={{
+        mode,
+        setMode: handleModeChange,
+        timeLeft,
+        isRunning,
+        start,
+        pause,
+        reset,
+        settings,
+        updateSettings,
+        progress,
+        completedPomodoros,
+      }}
+    >
+      {children}
+    </PomodoroContext.Provider>
   );
 }
 

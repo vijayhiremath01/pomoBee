@@ -3,7 +3,9 @@ package com.pomodoro.pomodoro.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.pomodoro.pomodoro.model.PomodoroSession;
 import com.pomodoro.pomodoro.repository.PomodoroSessionRepository;
@@ -29,7 +31,7 @@ public class PomodoroSessionService {
 
     public PomodoroSession completeSession(Long id) {
         PomodoroSession session = repository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Session not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
 
         session.setCompleted(true);
         session.setEndTime(LocalDateTime.now());

@@ -2,17 +2,17 @@ import { usePomodoro } from '@/contexts/PomodoroContext';
 
 export function CircularTimer() {
   const { timeLeft, progress, mode } = usePomodoro();
-  
+
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeDisplay = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  
+
   const size = 280;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
-  
+
   const getModeLabel = () => {
     switch (mode) {
       case 'pomodoro':
@@ -51,10 +51,11 @@ export function CircularTimer() {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          className="transition-all duration-1000 ease-linear"
+          style={{ transition: progress <= 0 || progress >= 100 ? 'none' : 'stroke-dashoffset 300ms ease-linear' }}
+          className="transition-all"
         />
       </svg>
-      
+
       {/* Timer display */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-sm font-medium text-muted-foreground mb-2">
