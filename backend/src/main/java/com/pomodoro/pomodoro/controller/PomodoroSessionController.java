@@ -1,4 +1,5 @@
 package com.pomodoro.pomodoro.controller;
+
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,25 +18,24 @@ public class PomodoroSessionController {
     private final PomodoroSessionService service;
 
     public PomodoroSessionController(PomodoroSessionService service) {
-        this.service = service ; 
-}
+        this.service = service;
+    }
 
     @PostMapping("/start")
-    public PomodoroSession stratSession(
-        @RequestParam String sessionType ,
-        @RequestParam int duration 
-    ) {
+    public PomodoroSession startSession(
+            @RequestParam String sessionType,
+            @RequestParam int duration) {
         return service.startSession(sessionType, duration);
     }
 
     @PostMapping("/complete/{id}")
-    public PomodoroSession completeSession(@PathVariable Long id){
+    public PomodoroSession completeSession(@PathVariable Long id) {
         return service.completeSession(id);
     }
 
     @GetMapping
-    public List<PomodoroSession> getAllSessions(){
+    public List<PomodoroSession> getAllSessions() {
         return service.getAllSessions();
-        }
+    }
 
 }

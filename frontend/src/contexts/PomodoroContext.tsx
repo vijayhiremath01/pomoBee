@@ -102,6 +102,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   const timerEndAtRef = useRef<number | null>(null);
   // 🔑 STORES BACKEND SESSION ID
   const sessionIdRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Restore sessionId and end timestamp from localStorage on mount
   useEffect(() => {
@@ -146,12 +147,15 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   const totalTime = getDuration(mode);
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
 
-  /* ---------- ALARM ---------- */
   const playAlarm = useCallback(() => {
     if (settings.alarmSound === "none") return;
 
-    const audioContext = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
+    if (!audioContextRef.current) {
+      // @ts-expect-error - webkitAudioContext is a legacy vendor prefix
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new AudioContextClass();
+    }
+    const audioContext = audioContextRef.current!;
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -187,9 +191,19 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
     setIsRunning(true);
 
+    // Resume AudioContext on user gesture
+    if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+      audioContextRef.current.resume();
+    } else if (!audioContextRef.current) {
+      // Pre-initialize it so it's ready when needed
+      // @ts-expect-error - webkitAudioContext is a legacy vendor prefix
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new AudioContextClass();
+    }
+
     try {
       const response = await fetch(
-        `http://localhost:8080/api/sessions/start?sessionType=${mode}&duration=${Math.floor(
+        `/api/sessions/start?sessionType=${mode}&duration=${Math.floor(
           getDuration(mode) / 60
         )}`,
         { method: "POST" }
@@ -249,7 +263,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     if (sessionIdRef.current) {
       try {
         await fetch(
-          `http://localhost:8080/api/sessions/complete/${sessionIdRef.current}`,
+          `/api/sessions/complete/${sessionIdRef.current}`,
           { method: "POST" }
         );
         console.log("Session completed:", sessionIdRef.current);
