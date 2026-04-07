@@ -29,10 +29,12 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+
 .env
 .env.local
 .env.development
 .env.test
 .env.production
+
+### VS Code ###
+.vscode/
