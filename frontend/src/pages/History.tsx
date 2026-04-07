@@ -1,34 +1,52 @@
-import { Layout } from '@/components/Layout';
-import { PageHeader } from '@/components/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { useQuery } from '@tanstack/react-query';
-import { Clock, CheckCircle2 } from 'lucide-react';
+import { Layout } from "@/components/Layout";
+import { PageHeader } from "@/components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import { Clock, CheckCircle2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 type TodayAnalytics = {
   totalMinutes: number;
   sessions: number;
 };
 
+type SessionHistoryItem = {
+  sessionId: string;
+  type: string;
+  startTime: string;
+  endTime: string | null;
+  durationMinutes: number;
+  cycleNumber: number;
+  longBreak: boolean;
+};
+
 // Fetches today's analytics from backend
 // Future analytics (weekly/monthly) can plug into similar hooks with different endpoints.
 function useTodayAnalytics() {
   return useQuery<TodayAnalytics>({
-    queryKey: ['analytics', 'today'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/today');
-      if (!res.ok) {
-        throw new Error('Failed to load analytics');
-      }
-      return res.json();
-    },
+    queryKey: ["stats", "daily"],
+    queryFn: () => api.get<TodayAnalytics>("/api/stats/daily"),
     staleTime: 30_000,
+  });
+}
+
+function useHistory() {
+  return useQuery<SessionHistoryItem[]>({
+    queryKey: ["sessions", "history"],
+    queryFn: () => api.get<SessionHistoryItem[]>("/api/session/history"),
+    staleTime: 10_000,
   });
 }
 
 const History = () => {
   const { data, isLoading, isError, error } = useTodayAnalytics();
+  const {
+    data: history,
+    isLoading: historyLoading,
+    isError: historyError,
+  } = useHistory();
 
   return (
     <Layout>
@@ -97,6 +115,43 @@ const History = () => {
                   <div className="text-xs text-muted-foreground">
                     More insights (streaks, trends, charts) are on the way.
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Recent Sessions</CardTitle>
+                  <CardDescription>Latest 20 sessions with durations.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {historyLoading && (
+                    <div className="py-2 text-sm text-muted-foreground">Loading history…</div>
+                  )}
+                  {historyError && (
+                    <div className="py-2 text-sm text-destructive">
+                      Could not load history. Try again.
+                    </div>
+                  )}
+                  {!historyLoading && !historyError && history && history.length === 0 && (
+                    <div className="py-2 text-sm text-muted-foreground">No sessions yet.</div>
+                  )}
+                  {!historyLoading && !historyError && history && history.length > 0 && (
+                    <ul className="space-y-2">
+                      {history.slice(0, 20).map((item) => (
+                        <li
+                          key={item.sessionId}
+                          className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"
+                        >
+                          <span className="font-medium text-foreground">
+                            {item.type === "FOCUS" ? "Focus" : item.longBreak ? "Long break" : "Break"}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {item.durationMinutes} min
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </CardContent>
               </Card>
             </section>

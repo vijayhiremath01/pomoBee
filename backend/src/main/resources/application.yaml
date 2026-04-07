@@ -1,0 +1,36 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
+  cache:
+    type: simple
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  docker:
+    compose:
+      enabled: false
+
+
+# JWT settings (single source of truth)
+jwt:
+  secret: ${JWT_SECRET}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev,local
+jwt:
+  # For dev/local only: auto-generate a stable-length random secret if JWT_SECRET not supplied.
+  # Tokens will rotate on each restart; set JWT_SECRET to keep them stable.
+  secret: ${JWT_SECRET:${random.uuid}}
+
+# Uncomment to avoid losing env vars during devtools restarts (IDE/CLI specific)
+#spring:
+#  devtools:
+#    restart:
+#      enabled: false

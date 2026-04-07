@@ -1,16 +1,71 @@
-import { useState } from 'react';
-import { Settings, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { usePomodoro } from '@/contexts/PomodoroContext';
-import { cn } from '@/lib/utils';
+import { useEffect, useRef, useState } from "react";
+import { Settings, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { usePomodoro } from "@/contexts/PomodoroContext";
+import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { toast } from "@/components/ui/use-toast";
 
 export function SettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const { settings, updateSettings } = usePomodoro();
+  const hasLoadedRemote = useRef(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch server settings on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await api.get<{ focusDuration: number; breakDuration: number }>("/api/settings");
+        updateSettings({
+          pomodoroDuration: data.focusDuration,
+          shortBreakDuration: data.breakDuration,
+        });
+        hasLoadedRemote.current = true;
+      } catch (error) {
+        // If unauthenticated or endpoint fails, keep local defaults
+        console.warn("Unable to load settings", error);
+        hasLoadedRemote.current = true; // allow subsequent saves
+      }
+    };
+    load();
+  }, [updateSettings]);
+
+  // Persist changes to backend with a tiny debounce
+  useEffect(() => {
+    if (!hasLoadedRemote.current) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      api
+        .post("/api/settings", {
+          focusDuration: settings.pomodoroDuration,
+          breakDuration: settings.shortBreakDuration,
+        })
+        .catch((error) =>
+          toast({
+            title: "Could not save settings",
+            description: (error as Error).message,
+            variant: "destructive",
+          }),
+        );
+    }, 300);
+
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [
+    settings.pomodoroDuration,
+    settings.shortBreakDuration,
+    settings.longBreakDuration,
+    settings.autoStartBreaks,
+    settings.autoStartPomodoro,
+    settings.alarmSound,
+    settings.darkMode,
+  ]);
 
   return (
     <>
@@ -26,8 +81,8 @@ export function SettingsModal() {
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-background/80 backdrop-blur-sm z-50 transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          "fixed inset-0 bg-background/80 backdrop-blur-sm z-50 transition-opacity duration-300",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => setIsOpen(false)}
       />
@@ -35,10 +90,10 @@ export function SettingsModal() {
       {/* Modal */}
       <div
         className={cn(
-          'fixed left-1/2 top-1/2 -translate-x-1/2 z-50 w-full max-w-md bg-card border border-border rounded-2xl shadow-lg transition-all duration-300',
+          "fixed left-1/2 top-1/2 -translate-x-1/2 z-50 w-full max-w-md bg-card border border-border rounded-2xl shadow-lg transition-all duration-300",
           isOpen
-            ? 'opacity-100 -translate-y-1/2 scale-100'
-            : 'opacity-0 -translate-y-[45%] scale-95 pointer-events-none'
+            ? "opacity-100 -translate-y-1/2 scale-100"
+            : "opacity-0 -translate-y-[45%] scale-95 pointer-events-none",
         )}
       >
         <div className="flex items-center justify-between p-6 border-b border-border">

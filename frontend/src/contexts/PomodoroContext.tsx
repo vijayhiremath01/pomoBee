@@ -6,6 +6,9 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { toast } from "@/components/ui/use-toast";
 
 /* ---------------- TYPES ---------------- */
 export type TimerMode = "pomodoro" | "shortBreak" | "longBreak";
@@ -33,6 +36,16 @@ interface PomodoroContextType {
   progress: number;
   completedPomodoros: number;
 }
+
+type SessionResponse = {
+  sessionId: string;
+  type: string;
+  startTime: string;
+  endTime: string | null;
+  durationMinutes: number;
+  cycleNumber: number;
+  longBreak: boolean;
+};
 
 /* ---------------- DEFAULT SETTINGS ---------------- */
 const defaultSettings: Settings = {
@@ -101,14 +114,15 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   // Absolute end timestamp (ms since epoch). Drives time-difference based countdown.
   const timerEndAtRef = useRef<number | null>(null);
   // 🔑 STORES BACKEND SESSION ID
-  const sessionIdRef = useRef<number | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const queryClient = useQueryClient();
 
   // Restore sessionId and end timestamp from localStorage on mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem(STORAGE_KEYS.sessionId);
     if (savedSessionId) {
-      sessionIdRef.current = parseInt(savedSessionId, 10);
+      sessionIdRef.current = savedSessionId;
     }
 
     const savedEndAt = localStorage.getItem(STORAGE_KEYS.endAt);
@@ -201,20 +215,22 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
       audioContextRef.current = new AudioContextClass();
     }
 
-    try {
-      const response = await fetch(
-        `/api/sessions/start?sessionType=${mode}&duration=${Math.floor(
-          getDuration(mode) / 60
-        )}`,
-        { method: "POST" }
-      );
+    const endpoint =
+      mode === "pomodoro" ? "/api/session/focus/start" : "/api/session/break/start";
 
-      const data = await response.json();
-      sessionIdRef.current = data.id;
-      localStorage.setItem(STORAGE_KEYS.sessionId, data.id.toString());
-      console.log("Session started with id:", data.id);
+    try {
+      const data = await api.post<SessionResponse>(endpoint);
+      sessionIdRef.current = data.sessionId;
+      localStorage.setItem(STORAGE_KEYS.sessionId, data.sessionId);
     } catch (error) {
-      console.error("Failed to start session", error);
+      setIsRunning(false);
+      timerEndAtRef.current = null;
+      localStorage.removeItem(STORAGE_KEYS.endAt);
+      toast({
+        title: "Could not start session",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
     }
   }, [mode, getDuration, timeLeft]);
 
@@ -262,13 +278,18 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     // Inform backend that session is complete
     if (sessionIdRef.current) {
       try {
-        await fetch(
-          `/api/sessions/complete/${sessionIdRef.current}`,
-          { method: "POST" }
-        );
-        console.log("Session completed:", sessionIdRef.current);
+        const minutes = Math.max(1, Math.round(getDuration(mode) / 60));
+        await api.post<SessionResponse>("/api/session/end", {
+          sessionId: sessionIdRef.current,
+          durationMinutes: minutes,
+        });
+        queryClient.invalidateQueries({ queryKey: ["stats", "daily"] });
       } catch (error) {
-        console.error("Failed to complete session", error);
+        toast({
+          title: "Failed to end session",
+          description: (error as Error).message,
+          variant: "destructive",
+        });
       }
       sessionIdRef.current = null;
       localStorage.removeItem(STORAGE_KEYS.sessionId);
@@ -289,7 +310,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
       setTimeLeft(getDuration("pomodoro"));
       setIsRunning(false);
     }
-  }, [mode, completedPomodoros, getDuration, playAlarm]);
+  }, [mode, completedPomodoros, getDuration, playAlarm, queryClient]);
 
   // Recompute remaining seconds from the absolute end time.
   // This avoids drift/throttling issues from setInterval in background tabs.

@@ -4,14 +4,17 @@
 For further reference, please consider the following sections:
 
 * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.1/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/4.0.1/maven-plugin/build-image.html)
-* [Spring Web](https://docs.spring.io/spring-boot/4.0.1/reference/web/servlet.html)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/4.0.1/reference/data/sql.html#data.sql.jpa-and-spring-data)
-* [Spring Security](https://docs.spring.io/spring-boot/4.0.1/reference/web/spring-security.html)
-* [Validation](https://docs.spring.io/spring-boot/4.0.1/reference/io/validation.html)
-* [HTTP Client](https://docs.spring.io/spring-boot/4.0.1/reference/io/rest-client.html#io.rest-client.restclient)
-* [MongoDB](https://docs.spring.io/spring-boot/4.0.1/reference/data/nosql.html#data.nosql.mongodb)
+* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.13/maven-plugin)
+* [Create an OCI image](https://docs.spring.io/spring-boot/3.5.13/maven-plugin/build-image.html)
+* [Spring Web](https://docs.spring.io/spring-boot/3.5.13/reference/web/servlet.html)
+* [Spring Security](https://docs.spring.io/spring-boot/3.5.13/reference/web/spring-security.html)
+* [Spring Data MongoDB](https://docs.spring.io/spring-boot/3.5.13/reference/data/nosql.html#data.nosql.mongodb)
+* [Spring Cache Abstraction](https://docs.spring.io/spring-boot/3.5.13/reference/io/caching.html)
+* [Validation](https://docs.spring.io/spring-boot/3.5.13/reference/io/validation.html)
+* [Spring Data Redis (Access+Driver)](https://docs.spring.io/spring-boot/3.5.13/reference/data/nosql.html#data.nosql.redis)
+* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.5.13/reference/using/devtools.html)
+* [Spring Boot Actuator](https://docs.spring.io/spring-boot/3.5.13/reference/actuator/index.html)
+* [Docker Compose Support](https://docs.spring.io/spring-boot/3.5.13/reference/features/dev-services.html#features.dev-services.docker-compose)
 
 ### Guides
 The following guides illustrate how to use some features concretely:
@@ -19,11 +22,23 @@ The following guides illustrate how to use some features concretely:
 * [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
 * [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
 * [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
 * [Securing a Web Application](https://spring.io/guides/gs/securing-web/)
 * [Spring Boot and OAuth2](https://spring.io/guides/tutorials/spring-boot-oauth2/)
 * [Authenticating a User with LDAP](https://spring.io/guides/gs/authenticating-ldap/)
+* [Accessing Data with MongoDB](https://spring.io/guides/gs/accessing-data-mongodb/)
+* [Caching Data with Spring](https://spring.io/guides/gs/caching/)
 * [Validation](https://spring.io/guides/gs/validating-form-input/)
+* [Messaging with Redis](https://spring.io/guides/gs/messaging-redis/)
+* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
+
+### Docker Compose support
+This project contains a Docker Compose file named `compose.yaml`.
+In this file, the following services have been defined:
+
+* mongodb: [`mongo:latest`](https://hub.docker.com/_/mongo)
+* redis: [`redis:latest`](https://hub.docker.com/_/redis)
+
+Please review the tags of the used images and set them to the same as you're running in production.
 
 ### Maven Parent overrides
 
