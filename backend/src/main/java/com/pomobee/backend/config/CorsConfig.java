@@ -27,17 +27,16 @@ public class CorsConfig implements WebMvcConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(CorsConfig.class);
 
-    private static final List<String> ALLOWED_ORIGINS = List.of(
+    private static final List<String> ALLOWED_ORIGIN_PATTERNS = List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "https://your-frontend.onrender.com" ,
             "https://pomo-bee.vercel.app"
     );
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns(ALLOWED_ORIGINS.toArray(new String[0]))
+                .allowedOriginPatterns(ALLOWED_ORIGIN_PATTERNS.toArray(new String[0]))
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization")
@@ -48,7 +47,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(ALLOWED_ORIGINS);
+        configuration.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERNS);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
