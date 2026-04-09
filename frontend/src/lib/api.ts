@@ -1,8 +1,7 @@
 import { clearToken, getToken } from "./auth";
 
-// Prefer explicit env; fall back to relative paths (use Vite proxy in dev or same-origin in prod).
-const ENV_BASE = import.meta.env.VITE_API_URL;
-const API_BASE = ENV_BASE ? ENV_BASE.replace(/\/$/, "") : "";
+// Prefer env (prod) and fall back to local Docker port during dev.
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:8081").replace(/\/$/, "");
 
 export type ApiEnvelope<T> = {
   success: boolean;
@@ -12,11 +11,7 @@ export type ApiEnvelope<T> = {
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = path.startsWith("http")
-    ? path
-    : API_BASE
-    ? `${API_BASE}${path}`
-    : path;
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
 
   const headers = new Headers(options.headers || {});
   headers.set("Accept", "application/json");
