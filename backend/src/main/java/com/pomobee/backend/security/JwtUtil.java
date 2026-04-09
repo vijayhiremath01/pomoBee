@@ -59,11 +59,10 @@ public class JwtUtil {
 
         byte[] keyBytes;
 
-        // Allow either raw text or Base64-encoded secrets
         try {
             keyBytes = Decoders.BASE64.decode(secret);
-        } catch (IllegalArgumentException ignored) {
-            keyBytes = secret.getBytes(); // raw text path
+        } catch (Exception e) {  // 🔥 FIX: catch ALL decoding errors
+            keyBytes = secret.getBytes();
         }
 
         if (keyBytes.length < 32) {
