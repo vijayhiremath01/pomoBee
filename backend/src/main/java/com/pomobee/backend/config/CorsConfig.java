@@ -30,7 +30,8 @@ public class CorsConfig implements WebMvcConfigurer {
     private static final List<String> ALLOWED_ORIGINS = List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "https://your-frontend.onrender.com"
+            "https://your-frontend.onrender.com" ,
+            "https://pomo-bee.vercel.app/"
     );
 
     @Override
