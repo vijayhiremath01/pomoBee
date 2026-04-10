@@ -104,8 +104,8 @@ const PrivacyPolicy = () => {
             <h2 className="text-xl font-semibold text-foreground mb-4">Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have any questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:privacy@pomodoro.app" className="text-primary hover:underline">
-                privacy@pomodoro.app
+              <a href="mailto:klarotech18@gmail.com" className="text-primary hover:underline">
+                klarotech18@gmail.com
               </a>
             </p>
           </section>

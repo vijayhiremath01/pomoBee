@@ -45,7 +45,7 @@ const Contact = () => {
           <div className="p-6 rounded-xl bg-card border border-border text-center">
             <Mail className="h-6 w-6 text-primary mx-auto mb-3" />
             <h3 className="font-medium text-foreground mb-1">Email</h3>
-            <p className="text-sm text-muted-foreground">support@pomodoro.app</p>
+            <p className="text-sm text-muted-foreground">voidprotocol18@gmail.com</p>
           </div>
           <div className="p-6 rounded-xl bg-card border border-border text-center">
             <MessageSquare className="h-6 w-6 text-primary mx-auto mb-3" />
