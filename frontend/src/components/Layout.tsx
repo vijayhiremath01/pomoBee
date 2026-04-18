@@ -16,7 +16,7 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
 
   const handleLogout = () => {
     clearToken();
-    navigate("/login");
+    navigate("/");
   };
 
   return (

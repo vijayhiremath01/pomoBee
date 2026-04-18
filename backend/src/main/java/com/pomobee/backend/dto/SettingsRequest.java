@@ -16,4 +16,5 @@ public class SettingsRequest {
     @Min(value = 3, message = "Break duration must be at least 3 minutes")
     @Max(value = 60, message = "Break duration cannot exceed 60 minutes")
     private int breakDuration; // minutes
+
 }

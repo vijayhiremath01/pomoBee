@@ -1,7 +1,20 @@
 import { clearToken, getToken } from "./auth";
 
-// Prefer env (prod) and fall back to local Docker port during dev.
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:8081").replace(/\/$/, "");
+// 🔥 Detect environment
+const isLocal = window.location.hostname === "localhost";
+
+// 🔥 Smart API base switch
+const API_BASE = (
+  isLocal
+    ? "http://localhost:8081" // ✅ local docker
+    : import.meta.env.VITE_API_URL // ✅ render
+).replace(/\/$/, "");
+
+// 🔥 DEBUG LOG (very useful)
+console.log(
+  `🚀 API MODE: ${isLocal ? "LOCAL (Docker)" : "PRODUCTION (Render)"}`
+);
+console.log("🔗 API BASE:", API_BASE);
 
 export type ApiEnvelope<T> = {
   success: boolean;
@@ -15,6 +28,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const headers = new Headers(options.headers || {});
   headers.set("Accept", "application/json");
+
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -28,28 +42,28 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   try {
     response = await fetch(url, { ...options, headers });
   } catch (err) {
-    console.error("API network error", err);
+    console.error("API network error ❌", err);
     throw new Error("Unable to reach server. Is the backend running?");
   }
 
+  // 🔥 Handle unauthorized
   if (response.status === 401) {
     clearToken();
-    // Redirect to login on unauthorized
-    window.location.href = "/login";
-    throw new Error("Unauthorized. Redirecting to login.  Please log in again. ");
+    console.warn("Unauthorized request (user not logged in)");
+    throw new Error("Unauthorized");
   }
 
   let parsed: ApiEnvelope<T>;
   try {
     parsed = (await response.json()) as ApiEnvelope<T>;
   } catch (err) {
-    console.error("Failed to parse response", err);
+    console.error("Failed to parse response ❌", err);
     throw new Error("Failed to parse server response");
   }
 
   if (!response.ok || !parsed.success) {
-    console.error("API error", parsed);
-    throw new Error(parsed?.message || "Request failed  with status " + response.status);
+    console.error("API error ❌", parsed);
+    throw new Error(parsed?.message || "Request failed with status " + response.status);
   }
 
   return parsed.data;
@@ -57,6 +71,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   get: <T>(path: string) => request<T>(path, { method: "GET" }),
+
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, {
       method: "POST",

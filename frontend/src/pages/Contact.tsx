@@ -1,35 +1,59 @@
-import { useState } from 'react';
-import { Layout } from '@/components/Layout';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
-import { Send, Mail, MessageSquare } from 'lucide-react';
+import { useState } from "react";
+import { Layout } from "@/components/Layout";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import { Send, Mail, MessageSquare } from "lucide-react";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Basic guard against empty/whitespace-only input (fields are also `required` in the UI).
+    if (![formData.name, formData.email, formData.subject, formData.message].every((v) => v.trim())) {
+      toast({
+        title: "Please fill all fields",
+        description: "Name, email, subject, and message are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+
+    // Build a mailto link with encoded subject/body so special characters don't break the URL.
+    const subject = encodeURIComponent(formData.subject);
+    const body = encodeURIComponent(
+      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+    );
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    const mailtoLink = `mailto:klarotech18@gmail.com?subject=${subject}&body=${body}`;
+
+    const a = document.createElement("a");
+     a.href = mailtoLink;
+     a.target = "_self";
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
+
     toast({
-      title: "Message sent!",
-      description: "Thank you for reaching out. We'll get back to you soon.",
+      title: "Opening email...",
+      description: "Your default email app will open with the message pre-filled.",
     });
-    
-    setFormData({ name: '', email: '', subject: '', message: '' });
+
+    // Clear form regardless of client availability.
+    setFormData({ name: "", email: "", subject: "", message: "" });
     setIsSubmitting(false);
   };
 
@@ -45,7 +69,7 @@ const Contact = () => {
           <div className="p-6 rounded-xl bg-card border border-border text-center">
             <Mail className="h-6 w-6 text-primary mx-auto mb-3" />
             <h3 className="font-medium text-foreground mb-1">Email</h3>
-            <p className="text-sm text-muted-foreground">voidprotocol18@gmail.com</p>
+            <p className="text-sm text-muted-foreground">klarotech18@gmail.com</p>
           </div>
           <div className="p-6 rounded-xl bg-card border border-border text-center">
             <MessageSquare className="h-6 w-6 text-primary mx-auto mb-3" />
